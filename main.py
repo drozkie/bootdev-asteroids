@@ -1,8 +1,13 @@
 import pygame
 from asteroid import *
-from constants import *
-from player import *
 from asteroidfield import *
+from constants import *
+from lives import *
+from player import *
+from scoreboard import *
+from shot import *
+
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 def main():
     print("Starting asteroids!")
@@ -10,21 +15,23 @@ def main():
     pygame.init()
 
     #CREATE GROUPS
-    updatable = pygame.sprite.Group()
-    drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
+    drawable = pygame.sprite.Group()
+    shots = pygame.sprite.Group()
+    updatable = pygame.sprite.Group()
 
     #CONFIGURE GROUPS
-    Player.containers = (updatable, drawable)
     Asteroid.containers = (updatable, drawable, asteroids)
     AsteroidField.containers = (updatable)
+    Player.containers = (updatable, drawable)
+    Shot.containers = (updatable, drawable, shots)
 
     #SET VARIABLES
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     game_clock = pygame.time.Clock()
     dt = 0
     p = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2) #GROUP (UPDATABLE, DRAWABLE)
     field = AsteroidField()
+    lives = Lives()
 
     print(f"Screen width: {SCREEN_WIDTH}")
     print(f"Screen height: {SCREEN_HEIGHT}")
@@ -48,6 +55,17 @@ def main():
             if p.check_collision(asteroid):
                 print("Game over!")
                 return
+
+        for shot in shots:
+            for asteroid in asteroids:
+                if shot.check_collision(asteroid):
+                    asteroid.split()
+                    p.add_points(asteroid)
+                    shot.kill()
+
+        current_score = p.get_score()
+
+        scoreboard(screen, current_score)
 
         pygame.display.flip()
 
